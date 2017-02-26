@@ -1,0 +1,7 @@
+# Byte-compiled
+*.py[cod]
+*$py.class
+__pycache__/
+
+# Jupyter Notebook
+*.ipynb_checkpoints
