@@ -6,10 +6,29 @@ Reference: mnist_with_summaries.py
 https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/tutorials/mnist/mnist_with_summaries.
 
 """
-import mnist_loader
 import tensorflow as tf
+
 import random
 import numpy as np
+import pickle
+import gzip
+
+# --------------------------------------------------------------------
+# Load data
+
+def one_hot(true_label):
+    one_hot_list = [int(i == true_label) for i in range(10)]
+    return np.reshape(one_hot_list, (10, 1))
+
+def load_data():
+    with gzip.open("mnist.pkl.gz", "rb") as f:
+        total_data = pickle.load(f, encoding="latin1")
+    for data in total_data:
+        data_x = [x.reshape(784, 1) for x in data[0]]
+        data_y = [one_hot(y) for y in data[1]]
+        data = list(zip(data_x, data_y))
+        yield data
+
 
 # --------------------------------------------------------------------
 # layer functions
@@ -40,7 +59,7 @@ def fc_layer(inputs, input_nums, output_nums, activation_func=tf.nn.relu):
 def main(_):
 
     # Import data
-    training_data, validation_data, test_data = mnist_loader.load_data()
+    training_data, validation_data, test_data = load_data()
 
     # Construct convolutional network
     x = tf.placeholder(tf.float32, [None, 784])
@@ -101,7 +120,7 @@ def main(_):
         batch_x, batch_y = next_batch(training_data, i, 100)
         if i % 100 == 0:
             train_accuracy = accuracy.eval(feed_dict={x: batch_x, y_: batch_y, keep_prob: 1.0})
-            test_batch_x, test_batch_y = next_batch(training_data, i, 100)
+            test_batch_x, test_batch_y = next_batch(test_data, i, 100)
             test_accuracy = accuracy.eval(feed_dict={x: test_batch_x, y_: test_batch_y, keep_prob: 1.0})
             print("step %d, training accuracy %7.4f, test accuracy %7.4f" % (i, train_accuracy, test_accuracy))
 
